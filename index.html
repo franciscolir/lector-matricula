@@ -32,7 +32,10 @@
       { placa: "JKL456", nombre: "Empresa X" },
     ];
 
-    navigator.mediaDevices.getUserMedia({ video: true })
+    navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: { exact: "environment" } }, // fuerza cámara trasera
+      audio: false
+    })
       .then((stream) => {
         video.srcObject = stream;
       })
