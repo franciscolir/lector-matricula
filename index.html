@@ -37,6 +37,7 @@
       audio: false
     })
       .then((stream) => {
+        const video = document.querySelector("video");
         video.srcObject = stream;
       })
       .catch((err) => {
