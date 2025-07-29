@@ -1,17 +1,74 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lectura de Matrículas en Vivo</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escáner de Placas</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: sans-serif; padding: 1rem; text-align: center; }
+    video, canvas { max-width: 100%; height: auto; }
+    #resultado { margin-top: 1rem; font-weight: bold; }
+  </style>
 </head>
 <body>
-    <h1>Lectura de Matrículas de Vehículos</h1>
-    <video id="video" width="640" height="480" autoplay></video>
-    <button id="start">Iniciar Reconocimiento</button>
-    <pre id="output"></pre>
+  <h1>Escanear Placa</h1>
+  <video id="video" autoplay playsinline></video>
+  <br>
+  <button onclick="capturarFoto()">Capturar</button>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <p id="resultado">Esperando captura...</p>
 
-    <script src="app.js"></script>
+  <script src="https://unpkg.com/tesseract.js@5.0.1/dist/tesseract.min.js"></script>
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const resultado = document.getElementById("resultado");
+
+    const vehiculosAutorizados = [
+      { placa: "ABC123", nombre: "Juan Pérez" },
+      { placa: "XYZ789", nombre: "Ana Gómez" },
+      { placa: "JKL456", nombre: "Empresa X" },
+    ];
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        resultado.textContent = "Error al acceder a la cámara: " + err;
+      });
+
+    function capturarFoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      resultado.textContent = "Procesando imagen...";
+
+      Tesseract.recognize(
+        canvas,
+        'eng',
+        { logger: m => console.log(m) }
+      ).then(({ data: { text } }) => {
+        const placaDetectada = text.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const match = vehiculosAutorizados.find(v => v.placa === placaDetectada);
+
+        if (match) {
+          resultado.textContent = `✅ Encontrado: ${match.nombre} (${match.placa})`;
+        } else {
+          resultado.textContent = `❌ Placa no autorizada: ${placaDetectada}`;
+        }
+      }).catch((err) => {
+        resultado.textContent = "Error en OCR: " + err;
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js').then(() => {
+        console.log("Service Worker registrado");
+      });
+    }
+  </script>
 </body>
 </html>
