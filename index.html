@@ -57,7 +57,7 @@
         'eng',
         { logger: m => console.log(m) }
       ).then(({ data: { text } }) => {
-        const placaDetectada = text.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+        const placaDetectada = text.trim().toUpperCase().replace(/[^BCDFGHJKLMNPQRSTVWXYZ0-9]/gi, ""); //Solo consonantes y numeros. Sin la Ñ ni caracteres especiales o espacios
         const match = vehiculosAutorizados.find(v => v.placa === placaDetectada);
 
         if (match) {
