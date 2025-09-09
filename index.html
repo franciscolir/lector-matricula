@@ -3,78 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Escáner de Placas</title>
-  <link rel="manifest" href="manifest.json">
-  <style>
-    body { font-family: sans-serif; padding: 1rem; text-align: center; }
-    video, canvas { max-width: 100%; height: auto; }
-    #resultado { margin-top: 1rem; font-weight: bold; }
-  </style>
+  <title>ALPR PWA — Reconocimiento de Patentes</title>
+  <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon-192.png" />
+  <link rel="apple-touch-icon" href="assets/icon-512.png" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>Escanear Placa 01</h1>
-  <video id="video" autoplay playsinline></video>
-  <br>
-  <button onclick="capturarFoto()">Capturar</button>
-  <canvas id="canvas" style="display: none;"></canvas>
-  <p id="resultado">Esperando captura...</p>
+  <header class="topbar">
+    <h1>🔎 ALPR PWA</h1>
+    <button id="installBtn" hidden>Instalar</button>
+  </header>
 
-  <script src="https://unpkg.com/tesseract.js@5.0.1/dist/tesseract.min.js"></script>
-  <script>
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const resultado = document.getElementById("resultado");
+  <main class="layout">
+    <section class="panel video-panel">
+      <h2>1) Cámara</h2>
+      <video id="video" autoplay playsinline></video>
+      <div class="controls">
+        <button id="startBtn">Iniciar cámara</button>
+        <button id="snapBtn" disabled>Escanear ahora</button>
+        <label class="toggle">
+          <input type="checkbox" id="autoScan" />
+          <span>Auto-scan cada 3s</span>
+        </label>
+        <select id="cameraSelect"></select>
+      </div>
+      <canvas id="frame" width="640" height="480" class="hidden"></canvas>
+    </section>
 
-    const vehiculosAutorizados = [
-      { placa: "ABC123", nombre: "Juan Pérez" },
-      { placa: "XYZ789", nombre: "Ana Gómez" },
-      { placa: "JKL456", nombre: "Empresa X" },
-      { placa: "PKYD98", nombre: "Cid Jr" },
-      { placa: "JKGT75", nombre: "Superman" },
-    ];
+    <section class="panel result-panel">
+      <h2>2) Resultado OCR</h2>
+      <div id="status" class="status">Listo</div>
+      <div class="ocr-box"><pre id="rawText"></pre></div>
+      <div class="plate-box">
+        <label>Patente detectada:</label>
+        <input id="plateDetected" type="text" placeholder="—" />
+        <button id="validateBtn">Validar en lista</button>
+      </div>
 
-    navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: { exact: "environment" } }, // fuerza cámara trasera
-      audio: false
-    })
-      .then((stream) => {
-        const video = document.querySelector("video");
-        video.srcObject = stream;
-      })
-      .catch((err) => {
-        resultado.textContent = "Error al acceder a la cámara: " + err;
-      });
+      <h2>3) Lista autorizada</h2>
+      <div class="list-actions">
+        <button id="addRandom">Agregar ejemplo</button>
+        <button id="clearList">Limpiar</button>
+      </div>
+      <table id="whitelistTable">
+        <thead><tr><th>Patente</th><th>Nombre</th><th>Notas</th><th>Acciones</th></tr></thead>
+        <tbody></tbody>
+      </table>
 
-    function capturarFoto() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      resultado.textContent = "Procesando imagen...";
+      <div id="matchBox" class="match-box">Sin validar</div>
+    </section>
+  </main>
 
-      Tesseract.recognize(
-        canvas,
-        'eng',
-        { logger: m => console.log(m) }
-      ).then(({ data: { text } }) => {
-        const placaDetectada = text.trim().toUpperCase().replace(/[^BCDFGHJKLMNPQRSTVWXYZ0-9]/gi, ""); //Solo consonantes y numeros. Sin la Ñ ni caracteres especiales o espacios
-        const match = vehiculosAutorizados.find(v => v.placa === placaDetectada);
+  <footer class="footer">Hecho con ❤️ + Tesseract.js + OpenCV.js</footer>
 
-        if (match) {
-          resultado.textContent = `✅ Encontrado: ${match.nombre} (${match.placa})`;
-        } else {
-          resultado.textContent = `❌ Placa no autorizada: ${placaDetectada}`;
-        }
-      }).catch((err) => {
-        resultado.textContent = "Error en OCR: " + err;
-      });
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').then(() => {
-        console.log("Service Worker registrado");
-      });
-    }
-  </script>
+  <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
+
