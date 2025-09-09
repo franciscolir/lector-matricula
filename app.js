@@ -18,7 +18,8 @@ let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',(e)=>
   {e.preventDefault();
                                                     
-   deferredPrompt=e;installBtn.hidden=false;
+   deferredPrompt=e;
+   installBtn.hidden=false;
                                                    
   });
 
@@ -39,28 +40,31 @@ async function loadCameras(){
        opt.textContent=cam.label||`Cámara ${idx+1}`;
        cameraSelect.appendChild(opt);
       });
-  }catch(e){console.warn('No se pudieron listar cámaras',e);
+  }catch(e){
+    console.warn('No se pudieron listar cámaras',e);
            }}
 async function startCamera(){
   try{
     if(stream){
       stream.getTracks().forEach(t=>t.stop());
     }
-    const constraints={video:
+    const constraints={
+      video:
     {
       deviceId:cameraSelect.value?
     {
       exact:cameraSelect.value
-    }
-        :undefined,
+    }:undefined,
      facingMode:cameraSelect.value?undefined:{
        ideal:'environment'},
      width:{ideal:1280},
      height:{ideal:720}
-    },audio:false};
+    },
+      audio:false};
     stream=await navigator.mediaDevices.getUserMedia(constraints);
     video.srcObject=stream;snapBtn.disabled=false;status('Cámara iniciada');
-  }catch(err){status('Error cámara: '+err.message,true);
+  }catch(err){
+    status('Error cámara: '+err.message,true);
              }}
 startBtn.addEventListener('click',async()=>{
   await startCamera();
