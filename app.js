@@ -68,16 +68,21 @@ async function startCamera(){
     status('Cámara iniciada');
   } catch (err) {
     status('Error cámara: '+err.message,true);
-             }}
+  }
+}
+
 startBtn.addEventListener('click',async()=>{
   await startCamera();
-  await loadCameras();
+  //await loadCameras();
 });
-cameraSelect.addEventListener('change',startCamera);
+//cameraSelect.addEventListener('change',startCamera);
 
+// --- Status helper ---
 function status(msg,isError=false){
-  statusEl.textContent=msg;statusEl.style.borderColor=isError?'#ef4444':'#374151';
+  statusEl.textContent = msg;
+  statusEl.style.borderColor = isError ? '#ef4444' : '#374151';
 }
+
 function drawFrame(){
   const ctx=frame.getContext('2d');
   const vw=video.videoWidth||640;
@@ -87,6 +92,7 @@ function drawFrame(){
   ctx.drawImage(video,0,0,vw,vh);
   return frame;
 }
+
 function preprocessFrame(srcCanvas){
   if(typeof cv==='undefined'||!cv.imread)
     return srcCanvas;
@@ -106,14 +112,22 @@ function preprocessFrame(srcCanvas){
   return srcCanvas;
 }
 
-function normalizePlate(text){
-  const upper=text.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  const regexCL=/\\b([A-Z]{2,4}[0-9]{2,4})\\b/;
-  const match=upper.match(regexCL);
-  if(match)
-    return match[1];
-  const candidates=upper.match(/[A-Z0-9]{5,8}/g)||[];
-  return candidates[0]||'';
+// --- Normalización de patentes ---
+function normalizePlate(text) {
+  const upper = (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  // Patente chilena clásica: 2 letras + 4 números
+  const regex1 = /\b([A-Z]{2}[0-9]{4})\b/;
+  // Formato inverso: 4 letras + 2 números
+  const regex2 = /\b([A-Z]{4}[0-9]{2})\b/;
+  // Secuencia genérica de 6 alfanuméricos
+  const regex3 = /\b([A-Z0-9]{6})\b/;
+
+  if (regex1.test(upper)) return upper.match(regex1)[1];
+  if (regex2.test(upper)) return upper.match(regex2)[1];
+  if (regex3.test(upper)) return upper.match(regex3)[1];
+
+  return '';
 }
 
 async function runOCR(canvasEl){
