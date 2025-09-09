@@ -1,36 +1,39 @@
-const video=document.getElementById('video');
-const frame=document.getElementById('frame');
-const startBtn=document.getElementById('startBtn');
-const snapBtn=document.getElementById('snapBtn');
-const rawTextEl=document.getElementById('rawText');
-const statusEl=document.getElementById('status');
-const autoScanEl=document.getElementById('autoScan');
-const plateDetectedEl=document.getElementById('plateDetected');
-const validateBtn=document.getElementById('validateBtn');
-const whitelistTableBody=document.querySelector('#whitelistTable tbody');
-const matchBox=document.getElementById('matchBox');
-const cameraSelect=document.getElementById('cameraSelect');
-const installBtn=document.getElementById('installBtn');
-let stream=null;
-let autoTimer=null;
-let deferredPrompt=null;
+const video = document.getElementById('video');
+const frame = document.getElementById('frame');
+const startBtn = document.getElementById('startBtn');
+const snapBtn = document.getElementById('snapBtn');
+const rawTextEl = document.getElementById('rawText');
+const statusEl = document.getElementById('status');
+const autoScanEl = document.getElementById('autoScan');
+const plateDetectedEl = document.getElementById('plateDetected');
+const validateBtn = document.getElementById('validateBtn');
+const whitelistTableBody = document.querySelector('#whitelistTable tbody');
+const matchBox = document.getElementById('matchBox');
+//const cameraSelect = document.getElementById('cameraSelect');
+const installBtn = document.getElementById('installBtn');
 
-window.addEventListener('beforeinstallprompt',(e)=>
-  {e.preventDefault();
-                                                    
-   deferredPrompt=e;
-   installBtn.hidden=false;
-                                                   
+let stream = null;
+let autoTimer = null;
+let deferredPrompt = null;
+
+// --- Instalación como PWA ---
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();                                           
+  deferredPrompt = e;
+  installBtn.hidden = false;                                                
   });
 
-installBtn.addEventListener('click',async()=>
-  {installBtn.hidden=true;
-   if(deferredPrompt)
-   {deferredPrompt.prompt();
-    await deferredPrompt.userChoice;deferredPrompt=null;
-   }});
+installBtn.addEventListener('click',async()=>{
+  installBtn.hidden = true;
+   if (deferredPrompt){
+     deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+     deferredPrompt=null;
+   }
+});
 
-async function loadCameras(){
+/*
+  async function loadCameras(){
   try{
     const devices=await navigator.mediaDevices.enumerateDevices();
     const cams=devices.filter(d=>d.kind==='videoinput');
@@ -43,27 +46,27 @@ async function loadCameras(){
   }catch(e){
     console.warn('No se pudieron listar cámaras',e);
            }}
+*/
+
+// --- Iniciar cámara trasera (sin select) ---
 async function startCamera(){
   try{
-    if(stream){
-      stream.getTracks().forEach(t=>t.stop());
+    if(stream) {
+      stream.getTracks().forEach(t => t.stop());
     }
-    const constraints={
-      video:
-    {
-      deviceId:cameraSelect.value?
-    {
-      exact:cameraSelect.value
-    }:undefined,
-     facingMode:cameraSelect.value?undefined:{
-       ideal:'environment'},
-     width:{ideal:1280},
-     height:{ideal:720}
-    },
-      audio:false};
-    stream=await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject=stream;snapBtn.disabled=false;status('Cámara iniciada');
-  }catch(err){
+    const constraints = {
+    video: {
+        facingMode: { exact: 'environment' }, // solo cámara trasera
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio:false
+    };
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    snapBtn.disabled = false;
+    status('Cámara iniciada');
+  } catch (err) {
     status('Error cámara: '+err.message,true);
              }}
 startBtn.addEventListener('click',async()=>{
