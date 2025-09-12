@@ -1,0 +1,9 @@
+{
+  "name": "ALPR PWA",
+  "short_name": "ALPR",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a73e8",
+  "description": "PWA Only-Front: YOLO TFJS + Tesseract.js ALPR (rear camera)"
+}
